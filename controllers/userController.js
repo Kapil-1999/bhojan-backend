@@ -7,7 +7,24 @@ import userModel from "../models/userModel.js"
 //login user
 
 const LoginUser = async (req, res) => {
+    const {email , password} = req.body;    
+    try {
+        const user = await userModel.findOne({email});        
+        if(!user) {
+            return res.json({success : false, message: "User doen't exist"})
+        }
 
+        const isMatch = await bcrypt.compare(password ,  user.password) 
+        if(!isMatch) {
+            return res.json({success : false, message: "Invaild Crendential"})
+        }
+
+        const token = createToken(user._id) 
+       return res.json({success: true, token , message: "User Login Successfully"})
+    } catch (error) {
+        console.log(error);
+        return res.json({success : false, message: "Error"})       
+    }
 }
 
 const createToken = (id) => {
@@ -15,7 +32,6 @@ const createToken = (id) => {
 }
 
 //register user
-
 const RegisterUser = async (req, res) => {
     const { name, password, email } = req.body;
     try {
@@ -43,7 +59,7 @@ const RegisterUser = async (req, res) => {
 
         const user = await newUser.save();
         const token = createToken(user._id);
-        res.json({success: true, token})
+        res.json({success: true, token , message: "User Added Successfully"})
     } catch (error) {
         console.log(error)
         res.json({success: false, message: "Error"})
